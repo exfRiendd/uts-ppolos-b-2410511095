@@ -9,20 +9,20 @@ const setupRoutes = (app) => {
 
             on: {
                 error: (err, req, res) => {
-                    console.error('[Gateway] Proxy error ke ${name}:', err.message);
+                    console.error(`[Gateway] Proxy error ke ${name}: ${err.message}`);
                     res.status(502).json({
                         success: false,
-                        message: 'Service "${name}" tidak dapat dijangkau.'
+                        message: `Service "${name}" tidak dapat dijangkau.`
                     });
                 },
                 proxyReq: (proxyReq, req) => {
-                    console.log('[Gateway] ${req.method} ${req.path} -> ${service.url}');
+                    console.log(`[Gateway] ${req.method} ${req.path} -> ${service.url}`);
                 },
             },
         };
 
         app.use(service.prefix, createProxyMiddleware(proxyOptions));
-        console.log('[Gateway] Route terdaftar: ${service.prefix} -> ${service.url}');
+        console.log(`[Gateway] Route terdaftar: ${service.prefix} -> ${service.url}`);
     });
 };
 

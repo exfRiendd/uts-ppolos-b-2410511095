@@ -1,7 +1,7 @@
 const services = {
     auth: {
         url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
-        prefix: 'api/auth',
+        prefix: '/api/auth',
         public: true,
     },
     inventory: {

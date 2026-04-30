@@ -1,126 +1,129 @@
-const bcrypt = require('bcrypt');
-const db = require('../config/database');
+const bcrypt       = require('bcryptjs');
+const db           = require('../config/database');
 const tokenService = require('../services/tokenService');
 
 const COOKIE_OPTS = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    samSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  secure:   process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge:   7 * 24 * 60 * 60 * 1000,
 };
 
 const authController = {
-    async register(req,res) {
-        const { username, email, password } = req.body;
-        
-        const exists = db.prepare(
-            'SELECT id FROM users WHERE email = ? OR username = ?'   
-        ).get(email, username);
+  async register(req, res) {
+    const { username, email, password } = req.body;
 
-        if(exists) {
-            return res.status(409).json({
-                succeess: false,
-                message: 'Email or username sudah digunakan',
-            });
-        }
+    const exists = db.prepare(
+      'SELECT id FROM users WHERE email = ? OR username = ?'
+    ).get(email, username);
 
-        const hashed = await bcrypt.hash(password, 12);
-        const result = db.prepare(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)'
-        ).run(username, email, hashed);
+    if (exists) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email atau username sudah digunakan.',
+      });
+    }
 
-        const user = { id: result.lastInsertRowid, email, role: 'user' };
+    const hashed = await bcrypt.hash(password, 12);
+    const result = db.prepare(
+      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)'
+    ).run(username, email, hashed);
 
-        const accessToken = tokenService.generateAccessToken(user);
-        const refreshToken = tokenService.generateRefreshToken(user.id);
+    const user = { id: result.lastInsertRowid, email, role: 'user' };
 
-        res.cookie('refreshTOken', refreshToken, COOKIE_OPTS);
-        res.status(201).json({
-            success: true,
-            message: 'Registrasi berhasil.',
-            accessToken,
-            user: { id: user.id, username, email, role: 'user' },
-        });
-    },
+    const accessToken  = tokenService.generateAccessToken(user);
+    const refreshToken = tokenService.generateRefreshToken(user.id);
 
-    async login(req,res) {
-        const { email, password } = req.body;
+    res.cookie('refreshToken', refreshToken, COOKIE_OPTS);
+    res.status(201).json({
+      success: true,
+      message: 'Registrasi berhasil.',
+      accessToken,
+      user: { id: user.id, username, email, role: 'user' },
+    });
+  },
 
-        const user = db.prepare(
-            'SELECT * FROM users WHERE email = ?'
-        ).get(email);
+  async login(req, res) {
+    const { email, password } = req.body;
 
-        if (!user || !user.password) {
-            return res.status(401).json({
-                success: false, 
-                message: 'Email atau password salah.',
-            });
-        }
+    const user = db.prepare(
+      'SELECT * FROM users WHERE email = ?'
+    ).get(email);
 
-        const calid = await bcrypt.compare(password, user.password);
-        if(!valid) {
-            return res.status(401).json({
-                success: false,
-                message: 'EMail atau password salah.',
-            });
-        }
-        const accessToken = tokenService.generateAccessToken(user);
-        const refreshTOken = tokenService.generateRefreshToken(user.id);
+    if (!user || !user.password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau password salah.',
+      });
+    }
 
-        res.cookie('refreshToken', refreshTOken, COOKIE_OPTS);
-        res.json({
-            success: true,
-            accessToken,
-            user: {id: user.id, username: user.username, email: user.email, role: user.role },
-        });
-    },
-    refresh(req,res) {
-        const rawToken = req.cookuies?.refreshToken;
-        if (!rawToken) {
-            return res.status(401).json({
-                success: false,
-                message: 'Refresh token tidak ditemukan.',
-            });
-        }
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau password salah.',
+      });
+    }
 
-        const record = tokenService.verifyRefreshToken(rawTOken);
-        if(!record) {
-            return res.status(401).json({
-                success: false,
-                message: 'Refresh token tidak valid atau sudah expired.',
-            });
-        }
+    const accessToken  = tokenService.generateAccessToken(user);
+    const refreshToken = tokenService.generateRefreshToken(user.id);
 
-        tokenService.revokeRefreshToken(rawTOken);
+    res.cookie('refreshToken', refreshToken, COOKIE_OPTS);
+    res.json({
+      success: true,
+      accessToken,
+      user: { id: user.id, username: user.username, email: user.email, role: user.role },
+    });
+  },
 
-        const user = { id: record.uid, email: record.email, role: record.role };
-        const accessToken = tokenService.generateAccessToken(user);
-        const newRefreshToken = tokenService.generateRefreshToken(user.id);
+  refresh(req, res) {
+    const rawToken = req.cookies?.refreshToken;
+    if (!rawToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token tidak ditemukan.',
+      });
+    }
 
-        res.cookie('refreshTOken', newRefreshToken, COOKIE_OPTS);
-        res.json({ success: true, accessToken });
-    },
-    logout(req, res) {
-        const rawToken = req.cookies?.refreshTOken;
-        if(rawToken) tokenService.revokeRefreshToken(rawTOken);
+    const record = tokenService.verifyRefreshToken(rawToken);
+    if (!record) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token tidak valid atau sudah expired.',
+      });
+    }
 
-        res.clearCookie('refreshTOken');
-        res.json({ success: true, message: 'Logout berhasil.' })
-    },
+    tokenService.revokeRefreshToken(rawToken);
 
-    verifyToken(req, res) {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader?.split(' ')[1];
-        if (!token) return res.status(401).json({ calid: false});
+    const user = { id: record.uid, email: record.email, role: record.role };
+    const accessToken     = tokenService.generateAccessToken(user);
+    const newRefreshToken = tokenService.generateRefreshToken(user.id);
 
-        try {
-            const jwt = require('jsonwebtoken');
-            const decoded = jwt.verify(token, ProcessingInstruction.env.JWTSERCRET);
-            resizeBy.json({ valid: true, user: decoded });
-        } catch {
-            res.status(401).json({ vlaid: false});
-        }
-    },
+    res.cookie('refreshToken', newRefreshToken, COOKIE_OPTS);
+    res.json({ success: true, accessToken });
+  },
+
+  logout(req, res) {
+    const rawToken = req.cookies?.refreshToken;
+    if (rawToken) tokenService.revokeRefreshToken(rawToken);
+
+    res.clearCookie('refreshToken');
+    res.json({ success: true, message: 'Logout berhasil.' });
+  },
+
+  verifyToken(req, res) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.split(' ')[1];
+    if (!token) return res.status(401).json({ valid: false });
+
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      res.json({ valid: true, user: decoded });
+    } catch {
+      res.status(401).json({ valid: false });
+    }
+  },
 };
 
 module.exports = authController;

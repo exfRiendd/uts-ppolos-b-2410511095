@@ -11,7 +11,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet()); 
-
 app.use(cors({
     origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -19,13 +18,12 @@ app.use(cors({
 }));
 
 app.use(rateLimiter); 
-app.use(jwtValidator);
-
 setupRoutes(app);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'api-gateway', timestamp: new Date() });
 });
+app.use(jwtValidator);
 
 app.use((req, res) => {
     res.status(404).json({ 
