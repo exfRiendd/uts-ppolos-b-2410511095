@@ -6,23 +6,28 @@ const setupRoutes = (app) => {
         const proxyOptions = {
             target: service.url,
             changeOrigin: true,
-
-            on: {
-                error: (err, req, res) => {
-                    console.error(`[Gateway] Proxy error ke ${name}: ${err.message}`);
-                    res.status(502).json({
-                        success: false,
-                        message: `Service "${name}" tidak dapat dijangkau.`
-                    });
-                },
-                proxyReq: (proxyReq, req) => {
-                    console.log(`[Gateway] ${req.method} ${req.path} -> ${service.url}`);
-                },
+            pathRewrite: (path, req) => {
+                const newPath = path.startsWith('/api') ? path : `/api${path}`;
+    
+                console.log(`[Rewrite] Original: ${path} -> Final: ${newPath}`);
+                return newPath;
             },
+            on: {
+                proxyReq: (proxyReq, req) => {
+                    proxyReq.setHeader('x-user-id', '1'); 
+                    proxyReq.setHeader('x-user-role', 'admin');
+                    
+                    console.log(`[Proxy] Sending to: ${service.url}${proxyReq.path}`);
+                },
+                error: (err, req, res) => {
+                    console.error(`[Error] ${name}: ${err.message}`);
+                    res.status(502).json({ success: false, message: `Service ${name} mati.` });
+                }
+            }
         };
 
         app.use(service.prefix, createProxyMiddleware(proxyOptions));
-        console.log(`[Gateway] Route terdaftar: ${service.prefix} -> ${service.url}`);
+        console.log(`[Gateway] Monitoring: ${service.prefix} -> ${service.url}`);
     });
 };
 
