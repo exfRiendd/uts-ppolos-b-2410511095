@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/', authRoutes);
+app.use('/api', authRoutes);
 
 app.get('/health', (_, res) =>
   res.json({ status: 'ok', service: 'auth-service' })
