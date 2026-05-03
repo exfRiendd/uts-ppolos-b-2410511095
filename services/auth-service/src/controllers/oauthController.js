@@ -8,20 +8,20 @@ const stateStore = new Map();
 
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure:   process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
-  maxAge:   7 * 24 * 60 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 const oauthController = {
   githubRedirect(req, res) {
     const state = crypto.randomBytes(16).toString('hex');
-    stateStore.set(state, Date.now() + 10 * 60 * 1000); 
+    stateStore.set(state, Date.now() + 10 * 60 * 1000);
 
     const params = new URLSearchParams({
-      client_id:    process.env.GITHUB_CLIENT_ID,
+      client_id: process.env.GITHUB_CLIENT_ID,
       redirect_uri: process.env.GITHUB_CALLBACK_URL,
-      scope:        'user:email',
+      scope: 'user:email',
       state,
     });
 
@@ -44,10 +44,10 @@ const oauthController = {
     const tokenRes = await axios.post(
       'https://github.com/login/oauth/access_token',
       {
-        client_id:     process.env.GITHUB_CLIENT_ID,
+        client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri:  process.env.GITHUB_CALLBACK_URL,
+        redirect_uri: process.env.GITHUB_CALLBACK_URL,
       },
       { headers: { Accept: 'application/json' } }
     );
@@ -69,7 +69,7 @@ const oauthController = {
       }),
     ]);
 
-    const githubUser  = userRes.data;
+    const githubUser = userRes.data;
     const primaryEmail = emailRes.data.find(e => e.primary)?.email || githubUser.email;
 
     let user = db.prepare(
@@ -91,7 +91,7 @@ const oauthController = {
       ).run(user.id, 'github', String(githubUser.id), githubAccessToken);
     }
 
-    const accessToken  = tokenService.generateAccessToken(user);
+    const accessToken = tokenService.generateAccessToken(user);
     const refreshToken = tokenService.generateRefreshToken(user.id);
 
     res.cookie('refreshToken', refreshToken, COOKIE_OPTS);

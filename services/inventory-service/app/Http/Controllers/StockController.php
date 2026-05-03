@@ -86,12 +86,6 @@ class StockController extends Controller
                     'created_by'   => $request->auth_user_id ?? 0,
                 ]);
 
-                \App\Models\OrderItem::create([
-                    'product_id' => $product->id,
-                    'order_id'   => $validated['order_id'],
-                    'quantity'   => $item['quantity'],
-                    'unit_price' => $product->price,
-                ]);
 
                 $processed[] = [
                     'product_id' => $product->id,

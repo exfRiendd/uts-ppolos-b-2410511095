@@ -1,12 +1,13 @@
-const bcrypt       = require('bcryptjs');
-const db           = require('../config/database');
+// src/controllers/authController.js
+const bcrypt = require('bcryptjs');
+const db = require('../config/database');
 const tokenService = require('../services/tokenService');
 
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure:   process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict',
-  maxAge:   7 * 24 * 60 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 const authController = {
@@ -31,7 +32,7 @@ const authController = {
 
     const user = { id: result.lastInsertRowid, email, role: 'user' };
 
-    const accessToken  = tokenService.generateAccessToken(user);
+    const accessToken = tokenService.generateAccessToken(user);
     const refreshToken = tokenService.generateRefreshToken(user.id);
 
     res.cookie('refreshToken', refreshToken, COOKIE_OPTS);
