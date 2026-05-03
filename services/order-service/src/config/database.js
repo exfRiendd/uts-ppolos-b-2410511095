@@ -5,7 +5,7 @@ const sequelize = new Sequelize(
     'root',
     '',
     {
-        host: process.env.DB_HOST,
+        host: process.env.DB_HOST || '127.0.0.1',
         dialect: 'mysql',
         logging: false,
     }

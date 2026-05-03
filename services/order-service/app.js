@@ -1,3 +1,4 @@
+require('dotenv').config({ path: './.env'});
 require('dotenv').config();
 console.log('DB User:', process.env.DB_USER);
 console.log('DB Pass:', process.env.DB_PASS);

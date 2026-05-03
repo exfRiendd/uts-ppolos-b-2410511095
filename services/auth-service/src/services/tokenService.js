@@ -1,18 +1,19 @@
 // src/services/tokenService.js
-const jwt    = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const db     = require('../config/database');
+const db = require('../config/database');
 
-const ACCESS_SECRET  = process.env.JWT_SECRET;
-const ACCESS_EXPIRY  = process.env.JWT_EXPIRES_IN  || '15m';
+const ACCESS_SECRET = process.env.JWT_SECRET;
+const ACCESS_EXPIRY = process.env.JWT_EXPIRES_IN  || '15m';
 const REFRESH_EXPIRY = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
-const REFRESH_MS     = parseInt(process.env.REFRESH_TOKEN_EXPIRES_MS) || 604800000;
+const REFRESH_MS = parseInt(process.env.REFRESH_TOKEN_EXPIRES_MS) || 604800000;
 
 const tokenService = {
   generateAccessToken(user) {
     return jwt.sign(
       {
         sub:   user.id,
+        id: user.id,
         email: user.email,
         role:  user.role,
       },
