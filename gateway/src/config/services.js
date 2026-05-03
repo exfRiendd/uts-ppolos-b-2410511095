@@ -3,7 +3,6 @@ const services = {
         url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
         prefix: '/api/auth',
         public: true,
-        rewrite: '/api'
     },
     inventory: {
         url: process.env.INVENTORY_SERVICE_URL || 'http://localhost:8000',
@@ -13,6 +12,11 @@ const services = {
     orders: {
         url: process.env.ORDER_SERVICE_URL || 'http://localhost:3002',
         prefix: '/api/orders',
+        public: false,
+    },
+    suppliers: {
+        url: process.env.ORDER_SERVICE_URL || 'http://localhost:3002',
+        prefix: '/api/suppliers',
         public: false,
     },
 };

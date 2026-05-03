@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3002;
 
 app.use(express.json());
 
-app.use('/api/orders/suppliers', supplierRouter);
+app.use('/api/suppliers', supplierRouter);
 app.use('/api/orders', orderRouter);
 
 app.get('/health', (_, res) =>
