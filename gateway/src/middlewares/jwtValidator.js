@@ -29,7 +29,7 @@ const jwtValidator = (req, res, next) => {
         req.headers['x-user-role'] = decoded.role || 'user';
         req.headers['x-user-email'] = decoded.email || '';
 
-        delete req.headers['authorization'];
+        // delete req.headers['authorization'];
 
         next();
     } catch (err) {

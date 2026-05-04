@@ -21,15 +21,16 @@ const setupRoutes = (app) => {
             },
             on: {
                 proxyReq: (proxyReq, req) => {
-                    const authHeader = req.headers['authorization'];
-                    if (authHeader) {
-                        proxyReq.setHeader('Authorization', authHeader);
+                    if (req.headers['x-user-id']) {
+                        proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+                        proxyReq.setHeader('x-user-role', req.headers['x-user-role']);
+                        proxyReq.setHeader('x-user-email', req.headers['x-user-email']);
                     }
-                    
-                    proxyReq.setHeader('x-user-id', '1'); 
-                    proxyReq.setHeader('x-user-role', 'admin');
-                    
-                    console.log(`[Proxy] Forwarding ${req.method} to: ${service.url}${proxyReq.path}`);
+
+                    if (req.headers['authorization']) {
+                        proxyReq.setHeader('Authorization', req.headers['authorization']);
+                    }
+                    console.log (`[Proxy] forwarding ${req.method} to ${service.url}${proxyReq.path}`);
                 },
                 error: (err, req, res) => {
                     console.error(`[Error] ${name}: ${err.message}`);
